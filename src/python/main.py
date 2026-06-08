@@ -2,7 +2,7 @@ from uart_handler import UARTHandler
 from checksum import lobot_check_sum
 
 uart = UARTHandler(
-    port="/dev/serial0",
+    port="/dev/ttyAMA0",
     baudrate=115200
 )
 
