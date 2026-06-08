@@ -17,10 +17,9 @@ message = [
     0x01,
     0xF4,
     0x01,
-    0x00,
 ]
 
-message[9] = lobot_check_sum(message)
+message.append(lobot_check_sum(message))
 
 uart.send(message)
 
