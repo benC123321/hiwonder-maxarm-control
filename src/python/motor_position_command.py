@@ -42,7 +42,7 @@ class MotorPositionCommand(BaseModel):
             MOVE_TIME_HIGH_BYTE=move_time_high
         )
         
-        self.CHECKSUM = lobot_check_sum(self.get_send_list)
+        self.CHECKSUM = lobot_check_sum(self.get_send_list())
 
     def get_send_list(self) -> List[int]:
         """

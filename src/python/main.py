@@ -9,6 +9,6 @@ uart = UARTHandler(
 
 command_template = MotorPositionCommand(motor_id=1, position=0x01F4, move_time=0x01F4)
 
-uart.send(command_template.get_send_list)
+uart.send(command_template.get_send_list())
 
 uart.close()
