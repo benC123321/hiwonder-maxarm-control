@@ -13,7 +13,8 @@ import sys
 
 import grpc
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))  # python/ for motor_control, embedded_comms
+sys.path.insert(0, str(Path(__file__).parent))          # networking/ for pb2 stubs
 
 import motor_control_pb2
 import motor_control_pb2_grpc
