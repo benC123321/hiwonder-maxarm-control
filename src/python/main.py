@@ -1,6 +1,5 @@
 from uart_handler import UARTHandler
-from checksum import lobot_check_sum
-
+from motor_position_command import MotorPositionCommand
 
 # This interface must be enabled in board config prior to use
 uart = UARTHandler(
@@ -8,20 +7,8 @@ uart = UARTHandler(
     baudrate=115200
 )
 
-message = [
-    0x55,
-    0x55,
-    0x01,
-    0x07,
-    0x01,
-    0xF4,
-    0x01,
-    0xF4,
-    0x01,
-]
+command_template = MotorPositionCommand(motor_id=1, position=0x01F4, move_time=0x01F4)
 
-message.append(lobot_check_sum(message))
-
-uart.send(message)
+uart.send(command_template.get_send_list)
 
 uart.close()
