@@ -22,6 +22,22 @@ from embedded_comms.uart_handler import UARTHandler
 
 log = logging.getLogger(__name__)
 
+# Inclusive position limits per motor_id. None means no limit on that side.
+_POSITION_LIMITS: dict[int, tuple[int | None, int | None]] = {
+    2: (None, 700),
+    3: (470, None),
+}
+
+
+def _check_position_limit(motor_id: int, position: int) -> str | None:
+    """Return an error string if position is out of bounds, else None."""
+    lo, hi = _POSITION_LIMITS.get(motor_id, (None, None))
+    if lo is not None and position < lo:
+        return f"motor_id {motor_id}: position {position} is below minimum {lo}"
+    if hi is not None and position > hi:
+        return f"motor_id {motor_id}: position {position} exceeds maximum {hi}"
+    return None
+
 
 class _MotorControlServicer(motor_control_pb2_grpc.MotorControlServiceServicer):
     def __init__(self, uart: UARTHandler):
@@ -34,6 +50,12 @@ class _MotorControlServicer(motor_control_pb2_grpc.MotorControlServiceServicer):
             request.position,
             request.move_time,
         )
+        limit_error = _check_position_limit(request.motor_id, request.position)
+        if limit_error:
+            log.warning("Rejected command: %s", limit_error)
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(limit_error)
+            return motor_control_pb2.MotorCommandResponse(success=False, message=limit_error)
         try:
             cmd = MotorPositionCommand(
                 motor_id=request.motor_id,
