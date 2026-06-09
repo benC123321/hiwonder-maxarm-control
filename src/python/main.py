@@ -1,14 +1,22 @@
-from uart_handler import UARTHandler
-from motor_position_command import MotorPositionCommand
+import logging
+import signal
+import sys
 
-# This interface must be enabled in board config prior to use
-uart = UARTHandler(
-    port="/dev/ttyAMA0",
-    baudrate=115200
-)
+from embedded_comms.uart_handler import UARTHandler
+from networking.grpc_interface import MotorControlServer
 
-command_template = MotorPositionCommand(motor_id=1, position=0x01F4, move_time=0x01F4)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-uart.send(command_template.get_send_list())
+uart = UARTHandler(port="/dev/ttyAMA0", baudrate=115200)
+server = MotorControlServer(uart)
+server.start()
 
-uart.close()
+def _shutdown(*_):
+    server.stop()
+    uart.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, _shutdown)
+signal.signal(signal.SIGTERM, _shutdown)
+
+server.wait_for_termination()
