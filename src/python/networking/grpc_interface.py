@@ -20,6 +20,7 @@ import motor_control_pb2
 import motor_control_pb2_grpc
 from motor_control.motor_position_command import MotorPositionCommand
 from embedded_comms.uart_handler import UARTHandler
+from embedded_comms.gpio_handler import GPIOHandler
 
 log = logging.getLogger(__name__)
 
@@ -41,8 +42,9 @@ def _check_position_limit(motor_id: int, position: int) -> str | None:
 
 
 class _MotorControlServicer(motor_control_pb2_grpc.MotorControlServiceServicer):
-    def __init__(self, uart: UARTHandler):
+    def __init__(self, uart: UARTHandler, gpio: GPIOHandler):
         self._uart = uart
+        self._gpio = gpio
 
     def SendCommand(self, request, context):
         log.info(
@@ -71,14 +73,26 @@ class _MotorControlServicer(motor_control_pb2_grpc.MotorControlServiceServicer):
             context.set_details(str(exc))
             return motor_control_pb2.MotorCommandResponse(success=False, message=str(exc))
 
+    def ToggleGPIO(self, request, context):
+        log.info("ToggleGPIO")
+        try:
+            pin_state = self._gpio.toggle()
+            return motor_control_pb2.GPIOToggleResponse(
+                success=True, message="OK", pin_state=pin_state
+            )
+        except Exception as exc:
+            log.exception("Failed to toggle GPIO")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(exc))
+            return motor_control_pb2.GPIOToggleResponse(success=False, message=str(exc))
+
 
 class MotorControlServer:
-    def __init__(self, uart: UARTHandler, port: int = 50051):
-        self._uart = uart
+    def __init__(self, uart: UARTHandler, gpio: GPIOHandler, port: int = 50051):
         self._port = port
         self._server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
         motor_control_pb2_grpc.add_MotorControlServiceServicer_to_server(
-            _MotorControlServicer(uart), self._server
+            _MotorControlServicer(uart, gpio), self._server
         )
         self._server.add_insecure_port(f"[::]:{self._port}")
 

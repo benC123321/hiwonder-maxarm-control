@@ -4,6 +4,7 @@ package motor_control;
 
 service MotorControlService {
   rpc SendCommand (MotorCommandRequest) returns (MotorCommandResponse);
+  rpc ToggleGPIO  (GPIOToggleRequest)   returns (GPIOToggleResponse);
 }
 
 message MotorCommandRequest {
@@ -15,4 +16,12 @@ message MotorCommandRequest {
 message MotorCommandResponse {
   bool   success = 1;
   string message = 2;
+}
+
+message GPIOToggleRequest {}
+
+message GPIOToggleResponse {
+  bool   success   = 1;
+  string message   = 2;
+  bool   pin_state = 3;
 }
