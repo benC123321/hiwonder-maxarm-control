@@ -1,19 +1,15 @@
-import RPi.GPIO as GPIO
+from gpiozero import DigitalOutputDevice
 
 GPIO_PIN = 17  # BCM GPIO 17
 
 
 class GPIOHandler:
     def __init__(self, pin: int = GPIO_PIN):
-        self._pin = pin
-        self._state = False
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self._pin, GPIO.OUT, initial=GPIO.LOW)
+        self._device = DigitalOutputDevice(pin, initial_value=False)
 
     def toggle(self) -> bool:
-        self._state = not self._state
-        GPIO.output(self._pin, GPIO.HIGH if self._state else GPIO.LOW)
-        return self._state
+        self._device.toggle()
+        return bool(self._device.value)
 
     def cleanup(self):
-        GPIO.cleanup(self._pin)
+        self._device.close()

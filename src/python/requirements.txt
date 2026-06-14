@@ -2,4 +2,5 @@ grpcio
 grpcio-tools
 pydantic
 pyserial
-RPi.GPIO
+gpiozero
+lgpio
